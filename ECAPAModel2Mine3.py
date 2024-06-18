@@ -26,6 +26,7 @@ class ECAPAModel(nn.Module):
         print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f" % (sum(param.numel() for param in self.speaker_encoder.parameters()) / 1024 / 1024))
 
     def train_network(self, epoch, loader):
+        print("I am in the train network ....")
         self.train()
         self.scheduler.step(epoch - 1)
         index, top1, loss = 0, 0, 0
@@ -84,9 +85,13 @@ class ECAPAModel(nn.Module):
 
         all_audio_data = torch.cat(all_audio_data, dim=0)
 
+        print("I am in the enroll network brfore affecting on the matrix ....")
+
         with torch.no_grad():
             all_embeddings = self.speaker_encoder.forward(all_audio_data, aug=False)
             all_embeddings = F.normalize(all_embeddings, p=2, dim=1)
+
+        print("I am in the enroll network after affecting on the matrix ....")
 
         # Compute mean embeddings for each model
         for model_id, files in model_files_dict.items():
@@ -99,6 +104,7 @@ class ECAPAModel(nn.Module):
             pickle.dump(enrollments, f)
 
     def test_network(self, test_list, test_path, path_save_model, compute_eer=True):
+        print("I am in  test method ....")
         self.eval()
         enrollments_path = os.path.join(path_save_model, "enrollments.pkl")
         print(f"Loading enrollments from {enrollments_path}")

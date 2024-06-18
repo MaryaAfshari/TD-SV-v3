@@ -10,8 +10,8 @@ import zipfile
 import pickle
 from tools import *
 from dataLoader2 import train_loader
-#from ECAPAModel2Mine2 import ECAPAModel
-from ECAPAModel2Mine3 import ECAPAModel
+from ECAPAModel_mysystem import ECAPAModel
+#from ECAPAModel2Mine3 import ECAPAModel
 import numpy as np
 
 parser = argparse.ArgumentParser(description="ECAPA_trainer")
@@ -26,17 +26,17 @@ parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
 parser.add_argument("--lr_decay", type=float, default=0.97, help='Learning rate decay every [test_step] epochs')
 
 # Paths
-parser.add_argument('--train_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/train_labels.txt", help='The path of the training list')
-parser.add_argument('--train_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/train", help='The path of the training data')
-parser.add_argument('--eval_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_trials.txt", help='The path of the evaluation list')
-parser.add_argument('--eval_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/evaluation", help='The path of the evaluation data')
-parser.add_argument('--enroll_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_model_enrollment.txt", help='The path of the enrollment list')
-parser.add_argument('--enroll_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/enrollment", help='The path of the enrollment data')
+parser.add_argument('--train_list', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/task1/docs/train_labels.txt", help='The path of the training list')
+parser.add_argument('--train_path', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/task1/wav/train", help='The path of the training data')
+parser.add_argument('--eval_list', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/task1/docs/dev_trials.txt", help='The path of the evaluation list')
+parser.add_argument('--eval_path', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/wav/evaluation", help='The path of the evaluation data')
+parser.add_argument('--enroll_list', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/task1/docs/dev_model_enrollment.txt", help='The path of the enrollment list')
+parser.add_argument('--enroll_path', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/task1/wav/enrollment", help='The path of the enrollment data')
 parser.add_argument('--musan_path', type=str, default="/data08/Others/musan_split", help='The path to the MUSAN set')
 parser.add_argument('--rir_path', type=str, default="/data08/Others/RIRS_NOISES/simulated_rirs", help='The path to the RIR set')
-parser.add_argument('--save_path', type=str, default="/mnt/disk1/users/afshari/MyEcapaModelTry3-code7", help='Path to save the score.txt and models')
+parser.add_argument('--save_path', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/SaveResult1/Models", help='Path to save the score.txt and models')
 parser.add_argument('--initial_model', type=str, default="", help='Path of the initial_model')
-parser.add_argument('--path_save_model', type=str, default="/mnt/disk1/users/afshari/MyEnrollmentTry3-code7", help='Path to save the enrollment and models')
+parser.add_argument('--path_save_model', type=str, default="/Users/maryamafshari/Desktop/Challenge/data/SaveResult1/Enrollments", help='Path to save the enrollment and models')
 
 # Model and Loss settings
 parser.add_argument('--C', type=int, default=1024, help='Channel size for the speaker encoder')
@@ -84,6 +84,7 @@ EERs = []
 score_file = open(os.path.join(args.save_path, "score.txt"), "a+")
 
 while(1):
+    print("I am here ")
     # Training for one epoch
     if epoch > 0: # I should change it later if I want to train from the base ........5.6.5024
         loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
