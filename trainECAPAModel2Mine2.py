@@ -10,8 +10,8 @@ import zipfile
 import pickle
 from tools import *
 from dataLoader2 import train_loader
-#from ECAPAModel2Mine2 import ECAPAModel
-from ECAPAModel2Mine3 import ECAPAModel
+from ECAPAModel2Mine2 import ECAPAModel
+#from ECAPAModel2Mine3 import ECAPAModel
 import numpy as np
 
 parser = argparse.ArgumentParser(description="ECAPA_trainer")
@@ -21,7 +21,7 @@ parser.add_argument('--num_frames', type=int, default=200, help='Duration of the
 parser.add_argument('--max_epoch', type=int, default=20, help='Maximum number of epochs')
 parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
 parser.add_argument('--n_cpu', type=int, default=1, help='Number of loader threads')
-parser.add_argument('--test_step', type=int, default=1, help='Test and save every [test_step] epochs')
+parser.add_argument('--test_step', type=int, default=10, help='Test and save every [test_step] epochs')
 parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
 parser.add_argument("--lr_decay", type=float, default=0.97, help='Learning rate decay every [test_step] epochs')
 
