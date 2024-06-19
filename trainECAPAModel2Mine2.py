@@ -74,6 +74,7 @@ elif len(modelfiles) >= 1:
     epoch = int(os.path.splitext(os.path.basename(modelfiles[-1]))[0][6:]) + 1
     s = ECAPAModel(**vars(args))
     s.load_parameters(modelfiles[-1])
+    print(epoch)
 else:
     print("Hello, I called the model ... trainECAPAModel.py")
     epoch = 1
@@ -85,12 +86,12 @@ score_file = open(os.path.join(args.save_path, "score.txt"), "a+")
 
 while(1):
     # Training for one epoch
-    if epoch > 0: # I should change it later if I want to train from the base ........5.6.5024
+    if epoch > 40: # I should change it later if I want to train from the base ........5.6.5024
         loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
 
     # Enrollment and Testing every [test_step] epochs
     if epoch % args.test_step == 0:
-        s.save_parameters(args.save_path + "/model_%04d.model" % epoch)
+        #s.save_parameters(args.save_path + "/model_%04d.model" % epoch)
         s.enroll_network(enroll_list=args.enroll_list, enroll_path=args.enroll_path, path_save_model=args.path_save_model)
         
         # Test with evaluation trials (without trial_type)
