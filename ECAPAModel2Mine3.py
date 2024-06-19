@@ -166,39 +166,62 @@ class ECAPAModel(nn.Module):
 
         test_files = list(set(test_files))  # Unique test files
 
-        # Extract embeddings for all unique test files
-        audio_data = []
-        for test_file in test_files:
-            file_name = os.path.join(test_path, test_file) + ".wav"
-            audio, _ = sf.read(file_name)
-            audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
+        # # Extract embeddings for all unique test files
+        # audio_data = []
+        # for test_file in test_files:
+        #     file_name = os.path.join(test_path, test_file) + ".wav"
+        #     audio, _ = sf.read(file_name)
+        #     audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
 
-        audio_data_batches = [audio_data[i:i + batch_size] for i in range(0, len(audio_data), batch_size)]
-        #audio_data = torch.cat(audio_data, dim=0)
+        # audio_data_batches = [audio_data[i:i + batch_size] for i in range(0, len(audio_data), batch_size)]
+        # #audio_data = torch.cat(audio_data, dim=0)
 
-        # with torch.no_grad():
-        #     test_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
-        #     test_embeddings = F.normalize(test_embeddings, p=2, dim=1)
+        # # with torch.no_grad():
+        # #     test_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
+        # #     test_embeddings = F.normalize(test_embeddings, p=2, dim=1)
 
-        # test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
+        # # test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
 
+        # test_embeddings = []
+        # Extract embeddings for all unique test files in batches
         test_embeddings = []
-        with torch.no_grad():
-            for batch_index, batch in enumerate(audio_data_batches):
-                print(f"Processing test batch {batch_index + 1} with {len(batch)} files")
-                batch_data = torch.cat(batch, dim=0)
-                batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
+        for i in range(0, len(test_files), batch_size):
+            batch_files = test_files[i:i + batch_size]
+            audio_data = []
+            for test_file in batch_files:
+                file_name = os.path.join(test_path, test_file) + ".wav"
+                audio, _ = sf.read(file_name)
+                audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
+
+            audio_data = torch.cat(audio_data, dim=0)
+            with torch.no_grad():
+                batch_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
                 batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
                 test_embeddings.append(batch_embeddings)
 
             # Clear GPU cache
-            del batch_data, batch_embeddings
+            del audio_data, batch_embeddings
             torch.cuda.empty_cache()
+        # Clear GPU cache
+        # del audio_data, batch_embeddings
+        # torch.cuda.empty_cache()
+        # with torch.no_grad():
+        #     for batch_index, batch in enumerate(audio_data_batches):
+        #         print(f"Processing test batch {batch_index + 1} with {len(batch)} files")
+        #         batch_data = torch.cat(batch, dim=0)
+        #         batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
+        #         batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
+        #         test_embeddings.append(batch_embeddings)
+
+            # # Clear GPU cache
+            # del batch_data, batch_embeddings
+            # torch.cuda.empty_cache()
 
         test_embeddings = torch.cat(test_embeddings, dim=0)
         print(f"Test embeddings shape: {test_embeddings.shape}")
 
-        test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
+        test_embedding_dict = {test_files[i]: test_embeddings[i] for i in range(len(test_files))}
+        #test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
 
         # Compute scores
         for line in lines:
