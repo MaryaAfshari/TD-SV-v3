@@ -52,7 +52,7 @@ class ECAPAModel(nn.Module):
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(speaker_labels)
 
-    def enroll_network(self, enroll_list, enroll_path, path_save_model, batch_size=16):
+    def enroll_network(self, enroll_list, enroll_path, path_save_model, batch_size=8):
         self.eval()
         print("I am in enroll method ....")
         enrollments = {}
