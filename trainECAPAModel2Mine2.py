@@ -28,9 +28,9 @@ parser.add_argument("--lr_decay", type=float, default=0.97, help='Learning rate 
 # Paths
 parser.add_argument('--train_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/train_labels.txt", help='The path of the training list')
 parser.add_argument('--train_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/train", help='The path of the training data')
-parser.add_argument('--eval_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_trials.txt", help='The path of the evaluation list')
+parser.add_argument('--eval_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/eval_trials.txt", help='The path of the evaluation list')
 parser.add_argument('--eval_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/evaluation", help='The path of the evaluation data')
-parser.add_argument('--enroll_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_model_enrollment.txt", help='The path of the enrollment list')
+parser.add_argument('--enroll_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/eval_model_enrollment.txt", help='The path of the enrollment list')
 parser.add_argument('--enroll_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/enrollment", help='The path of the enrollment data')
 parser.add_argument('--musan_path', type=str, default="/data08/Others/musan_split", help='The path to the MUSAN set')
 parser.add_argument('--rir_path', type=str, default="/data08/Others/RIRS_NOISES/simulated_rirs", help='The path to the RIR set')
