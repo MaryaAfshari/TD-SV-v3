@@ -52,7 +52,7 @@ class ECAPAModel(nn.Module):
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(speaker_labels)
 
-    def enroll_network(self, enroll_list, enroll_path, path_save_model, batch_size=4):
+    def enroll_network(self, enroll_list, enroll_path, path_save_model, batch_size=2):
         self.eval()
         print("I am in enroll method ....")
         enrollments = {}
@@ -137,7 +137,7 @@ class ECAPAModel(nn.Module):
         with open(os.path.join(path_save_model, "enrollments.pkl"), "wb") as f:
             pickle.dump(enrollments, f)
 
-    def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=2):
+    def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=1):
         print("I am in the test method ....")
         self.eval()
         enrollments_path = os.path.join(path_save_model, "enrollments.pkl")
