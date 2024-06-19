@@ -79,13 +79,34 @@ class ECAPAModel(nn.Module):
             for file in unique_files:
                 file_name = os.path.join(enroll_path, file) + ".wav"
                 audio, _ = sf.read(file_name)
-                all_audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
+                audio_tensor = torch.FloatTensor(np.stack([audio], axis=0)).cuda()
+                all_audio_data.append(audio_tensor)
+                #all_audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
                 file_to_index[file] = index
                 index += 1
+                print(f"Loaded tensor shape: {audio_tensor.shape} for file {file_name}")
 
-        all_audio_data = torch.cat(all_audio_data, dim=0)
+        # Find the maximum size for padding
+        max_size = max(tensor.size(1) for tensor in all_audio_data)
+        print(f"Max size for padding: {max_size}")
 
-        print("I am in the enroll network brfore affecting on the matrix ....")
+        # Pad tensors to the same size
+        padded_audio_data = []
+        for tensor in all_audio_data:
+            if tensor.size(1) < max_size:
+                pad_size = max_size - tensor.size(1)
+                padded_tensor = F.pad(tensor, (0, pad_size))
+                padded_audio_data.append(padded_tensor)
+                print(f"Padded tensor from shape {tensor.shape} to {padded_tensor.shape}")
+            else:
+                padded_audio_data.append(tensor)
+
+        #all_audio_data = torch.cat(all_audio_data, dim=0)
+
+        all_audio_data = torch.cat(padded_audio_data, dim=0)
+        print(f"All audio data shape after padding and concatenation: {all_audio_data.shape}")
+
+        print("I am in the enroll network after padding and  brfore affecting on the matrix ....")
 
         with torch.no_grad():
             all_embeddings = self.speaker_encoder.forward(all_audio_data, aug=False)
