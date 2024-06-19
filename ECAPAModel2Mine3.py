@@ -137,7 +137,7 @@ class ECAPAModel(nn.Module):
         with open(os.path.join(path_save_model, "enrollments.pkl"), "wb") as f:
             pickle.dump(enrollments, f)
 
-    def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=8):
+    def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=4):
         print("I am in  test method ....")
         self.eval()
         enrollments_path = os.path.join(path_save_model, "enrollments.pkl")
@@ -169,15 +169,18 @@ class ECAPAModel(nn.Module):
 
         # Extract and pad embeddings for all unique test files in batches
         all_audio_data = []
+        max_size = 0
         for test_file in test_files:
             file_name = os.path.join(test_path, test_file) + ".wav"
             audio, _ = sf.read(file_name)
             audio_tensor = torch.FloatTensor(np.stack([audio], axis=0)).cuda()
             all_audio_data.append(audio_tensor)
+            if audio_tensor.size(1) > max_size:
+                max_size = audio_tensor.size(1)
             print(f"Loaded tensor shape: {audio_tensor.shape} for file {file_name}")
 
         # Find the maximum size for padding
-        max_size = max(tensor.size(1) for tensor in all_audio_data)
+        #max_size = max(tensor.size(1) for tensor in all_audio_data)
         print(f"Max size for padding: {max_size}")
 
         # Pad tensors to the same size
