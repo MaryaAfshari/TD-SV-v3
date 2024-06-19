@@ -138,7 +138,7 @@ class ECAPAModel(nn.Module):
             pickle.dump(enrollments, f)
 
     def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=4):
-        print("I am in  test method ....")
+        print("I am in the test method ....")
         self.eval()
         enrollments_path = os.path.join(path_save_model, "enrollments.pkl")
         print(f"Loading enrollments from {enrollments_path}")
@@ -166,84 +166,50 @@ class ECAPAModel(nn.Module):
 
         test_files = list(set(test_files))  # Unique test files
 
-
-        # Extract and pad embeddings for all unique test files in batches
-        all_audio_data = []
+        # Process test files in batches
         max_size = 0
-        for test_file in test_files:
-            file_name = os.path.join(test_path, test_file) + ".wav"
-            audio, _ = sf.read(file_name)
-            audio_tensor = torch.FloatTensor(np.stack([audio], axis=0)).cuda()
-            all_audio_data.append(audio_tensor)
-            if audio_tensor.size(1) > max_size:
-                max_size = audio_tensor.size(1)
-            print(f"Loaded tensor shape: {audio_tensor.shape} for file {file_name}")
+        audio_tensors = []
 
-        # Find the maximum size for padding
-        #max_size = max(tensor.size(1) for tensor in all_audio_data)
-        print(f"Max size for padding: {max_size}")
+        for i in range(0, len(test_files), batch_size):
+            batch_files = test_files[i:i + batch_size]
+            batch_audio = []
 
-        # Pad tensors to the same size
-        padded_audio_data = []
-        for tensor in all_audio_data:
-            if tensor.size(1) < max_size:
-                pad_size = max_size - tensor.size(1)
-                padded_tensor = F.pad(tensor, (0, pad_size))
-                padded_audio_data.append(padded_tensor)
-                print(f"Padded tensor from shape {tensor.shape} to {padded_tensor.shape}")
-            else:
-                padded_audio_data.append(tensor)
+            for test_file in batch_files:
+                file_name = os.path.join(test_path, test_file) + ".wav"
+                audio, _ = sf.read(file_name)
+                audio_tensor = torch.FloatTensor(np.stack([audio], axis=0))
+                batch_audio.append(audio_tensor)
+                if audio_tensor.size(1) > max_size:
+                    max_size = audio_tensor.size(1)
+                print(f"Loaded tensor shape: {audio_tensor.shape} for file {file_name}")
 
-        # # Extract embeddings for all unique test files
-        # audio_data = []
-        # for test_file in test_files:
-        #     file_name = os.path.join(test_path, test_file) + ".wav"
-        #     audio, _ = sf.read(file_name)
-        #     audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
+            print(f"Max size for padding in batch {i//batch_size + 1}: {max_size}")
 
-        # audio_data_batches = [audio_data[i:i + batch_size] for i in range(0, len(audio_data), batch_size)]
-        # #audio_data = torch.cat(audio_data, dim=0)
+            # Pad and process batch audio
+            padded_batch_audio = []
+            for tensor in batch_audio:
+                if tensor.size(1) < max_size:
+                    pad_size = max_size - tensor.size(1)
+                    padded_tensor = F.pad(tensor, (0, pad_size))
+                    padded_batch_audio.append(padded_tensor)
+                    print(f"Padded tensor from shape {tensor.shape} to {padded_tensor.shape}")
+                else:
+                    padded_batch_audio.append(tensor)
 
-        # # with torch.no_grad():
-        # #     test_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
-        # #     test_embeddings = F.normalize(test_embeddings, p=2, dim=1)
-
-        # # test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
-
-        # test_embeddings = []
-        # Extract embeddings for all unique test files in batches
-        test_embeddings = []
-        for i in range(0, len(padded_audio_data), batch_size):
-            batch = padded_audio_data[i:i + batch_size]
-            batch_data = torch.cat(batch, dim=0)
+            batch_data = torch.cat(padded_batch_audio, dim=0).cuda()
             with torch.no_grad():
                 batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
                 batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
-                test_embeddings.append(batch_embeddings)
+                audio_tensors.extend(batch_embeddings)
 
             # Clear GPU cache
-            del audio_data, batch_embeddings
+            del batch_data, batch_embeddings, padded_batch_audio
             torch.cuda.empty_cache()
-        # Clear GPU cache
-        # del audio_data, batch_embeddings
-        # torch.cuda.empty_cache()
-        # with torch.no_grad():
-        #     for batch_index, batch in enumerate(audio_data_batches):
-        #         print(f"Processing test batch {batch_index + 1} with {len(batch)} files")
-        #         batch_data = torch.cat(batch, dim=0)
-        #         batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
-        #         batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
-        #         test_embeddings.append(batch_embeddings)
 
-            # # Clear GPU cache
-            # del batch_data, batch_embeddings
-            # torch.cuda.empty_cache()
-
-        test_embeddings = torch.cat(test_embeddings, dim=0)
+        test_embeddings = torch.stack(audio_tensors)
         print(f"Test embeddings shape: {test_embeddings.shape}")
-
+        
         test_embedding_dict = {test_files[i]: test_embeddings[i] for i in range(len(test_files))}
-        #test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
 
         # Compute scores
         for line in lines:
@@ -273,6 +239,7 @@ class ECAPAModel(nn.Module):
             zipf.write(answer_file_path, os.path.basename(answer_file_path))
 
         return EER, minDCF, scores
+    
 
     def save_parameters(self, path):
         torch.save(self.state_dict(), path)
