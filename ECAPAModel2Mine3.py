@@ -166,6 +166,31 @@ class ECAPAModel(nn.Module):
 
         test_files = list(set(test_files))  # Unique test files
 
+
+        # Extract and pad embeddings for all unique test files in batches
+        all_audio_data = []
+        for test_file in test_files:
+            file_name = os.path.join(test_path, test_file) + ".wav"
+            audio, _ = sf.read(file_name)
+            audio_tensor = torch.FloatTensor(np.stack([audio], axis=0)).cuda()
+            all_audio_data.append(audio_tensor)
+            print(f"Loaded tensor shape: {audio_tensor.shape} for file {file_name}")
+
+        # Find the maximum size for padding
+        max_size = max(tensor.size(1) for tensor in all_audio_data)
+        print(f"Max size for padding: {max_size}")
+
+        # Pad tensors to the same size
+        padded_audio_data = []
+        for tensor in all_audio_data:
+            if tensor.size(1) < max_size:
+                pad_size = max_size - tensor.size(1)
+                padded_tensor = F.pad(tensor, (0, pad_size))
+                padded_audio_data.append(padded_tensor)
+                print(f"Padded tensor from shape {tensor.shape} to {padded_tensor.shape}")
+            else:
+                padded_audio_data.append(tensor)
+
         # # Extract embeddings for all unique test files
         # audio_data = []
         # for test_file in test_files:
@@ -185,17 +210,11 @@ class ECAPAModel(nn.Module):
         # test_embeddings = []
         # Extract embeddings for all unique test files in batches
         test_embeddings = []
-        for i in range(0, len(test_files), batch_size):
-            batch_files = test_files[i:i + batch_size]
-            audio_data = []
-            for test_file in batch_files:
-                file_name = os.path.join(test_path, test_file) + ".wav"
-                audio, _ = sf.read(file_name)
-                audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
-
-            audio_data = torch.cat(audio_data, dim=0)
+        for i in range(0, len(padded_audio_data), batch_size):
+            batch = padded_audio_data[i:i + batch_size]
+            batch_data = torch.cat(batch, dim=0)
             with torch.no_grad():
-                batch_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
+                batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
                 batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
                 test_embeddings.append(batch_embeddings)
 
