@@ -52,7 +52,7 @@ class ECAPAModel(nn.Module):
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(speaker_labels)
 
-    def enroll_network(self, enroll_list, enroll_path, path_save_model):
+    def enroll_network(self, enroll_list, enroll_path, path_save_model, batch_size=32):
         self.eval()
         print("I am in enroll method ....")
         enrollments = {}
@@ -108,9 +108,22 @@ class ECAPAModel(nn.Module):
 
         print("I am in the enroll network after padding and  brfore affecting on the matrix ....")
 
+        # with torch.no_grad():
+        #     all_embeddings = self.speaker_encoder.forward(all_audio_data, aug=False)
+        #     all_embeddings = F.normalize(all_embeddings, p=2, dim=1)
+        all_embeddings = []
         with torch.no_grad():
-            all_embeddings = self.speaker_encoder.forward(all_audio_data, aug=False)
-            all_embeddings = F.normalize(all_embeddings, p=2, dim=1)
+            # Process in batches
+            for i in range(0, len(padded_audio_data), batch_size):
+                batch = padded_audio_data[i:i+batch_size]
+                batch_data = torch.cat(batch, dim=0)
+                print(f"Processing batch {i//batch_size + 1} with shape: {batch_data.shape}")
+                batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
+                batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
+                all_embeddings.append(batch_embeddings)
+
+        all_embeddings = torch.cat(all_embeddings, dim=0)
+        print(f"All embeddings shape: {all_embeddings.shape}")
 
         print("I am in the enroll network after affecting on the matrix ....")
 
