@@ -21,16 +21,16 @@ parser.add_argument('--num_frames', type=int, default=200, help='Duration of the
 parser.add_argument('--max_epoch', type=int, default=20, help='Maximum number of epochs')
 parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
 parser.add_argument('--n_cpu', type=int, default=1, help='Number of loader threads')
-parser.add_argument('--test_step', type=int, default=10, help='Test and save every [test_step] epochs')
+parser.add_argument('--test_step', type=int, default=1, help='Test and save every [test_step] epochs')
 parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
 parser.add_argument("--lr_decay", type=float, default=0.97, help='Learning rate decay every [test_step] epochs')
 
 # Paths
 parser.add_argument('--train_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/train_labels.txt", help='The path of the training list')
 parser.add_argument('--train_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/train", help='The path of the training data')
-parser.add_argument('--eval_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_trials.txt", help='The path of the evaluation list')
+parser.add_argument('--eval_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/eval_trials.txt", help='The path of the evaluation list')
 parser.add_argument('--eval_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/evaluation", help='The path of the evaluation data')
-parser.add_argument('--enroll_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/dev_model_enrollment.txt", help='The path of the enrollment list')
+parser.add_argument('--enroll_list', type=str, default="/mnt/disk1/data/TdSVC2024/task1/docs/eval_model_enrollment.txt", help='The path of the enrollment list')
 parser.add_argument('--enroll_path', type=str, default="/mnt/disk1/data/TdSVC2024/task1/wav/enrollment", help='The path of the enrollment data')
 parser.add_argument('--musan_path', type=str, default="/data08/Others/musan_split", help='The path to the MUSAN set')
 parser.add_argument('--rir_path', type=str, default="/data08/Others/RIRS_NOISES/simulated_rirs", help='The path to the RIR set')
@@ -91,7 +91,7 @@ while(1):
 
     # Enrollment and Testing every [test_step] epochs
     if epoch % args.test_step == 0:
-        #s.save_parameters(args.save_path + "/model_%04d.model" % epoch)
+        s.save_parameters(args.save_path + "/model_%04d.model" % epoch)
         s.enroll_network(enroll_list=args.enroll_list, enroll_path=args.enroll_path, path_save_model=args.path_save_model)
         
         # Test with evaluation trials (without trial_type)
