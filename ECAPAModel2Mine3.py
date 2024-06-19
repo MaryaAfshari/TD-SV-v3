@@ -137,7 +137,7 @@ class ECAPAModel(nn.Module):
         with open(os.path.join(path_save_model, "enrollments.pkl"), "wb") as f:
             pickle.dump(enrollments, f)
 
-    def test_network(self, test_list, test_path, path_save_model, compute_eer=True):
+    def test_network(self, test_list, test_path, path_save_model, compute_eer=True, batch_size=8):
         print("I am in  test method ....")
         self.eval()
         enrollments_path = os.path.join(path_save_model, "enrollments.pkl")
@@ -173,11 +173,30 @@ class ECAPAModel(nn.Module):
             audio, _ = sf.read(file_name)
             audio_data.append(torch.FloatTensor(np.stack([audio], axis=0)).cuda())
 
-        audio_data = torch.cat(audio_data, dim=0)
+        audio_data_batches = [audio_data[i:i + batch_size] for i in range(0, len(audio_data), batch_size)]
+        #audio_data = torch.cat(audio_data, dim=0)
 
+        # with torch.no_grad():
+        #     test_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
+        #     test_embeddings = F.normalize(test_embeddings, p=2, dim=1)
+
+        # test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
+
+        test_embeddings = []
         with torch.no_grad():
-            test_embeddings = self.speaker_encoder.forward(audio_data, aug=False)
-            test_embeddings = F.normalize(test_embeddings, p=2, dim=1)
+            for batch_index, batch in enumerate(audio_data_batches):
+                print(f"Processing test batch {batch_index + 1} with {len(batch)} files")
+                batch_data = torch.cat(batch, dim=0)
+                batch_embeddings = self.speaker_encoder.forward(batch_data, aug=False)
+                batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
+                test_embeddings.append(batch_embeddings)
+
+            # Clear GPU cache
+            del batch_data, batch_embeddings
+            torch.cuda.empty_cache()
+
+        test_embeddings = torch.cat(test_embeddings, dim=0)
+        print(f"Test embeddings shape: {test_embeddings.shape}")
 
         test_embedding_dict = {test_file: test_embeddings[i] for i, test_file in enumerate(test_files)}
 
